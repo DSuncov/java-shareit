@@ -34,6 +34,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional(readOnly = true)
     public BookingResponseDto getBookingByIdAndUser(Long bookingId, Long userId) {
+        log.info("Обрабатываем запрос на получение бронирования с id = {} ...", bookingId);
         Booking bookingByUser = bookingRepository.findByIdAndUser(bookingId, userId)
                 .orElseGet(() -> bookingRepository.findByIdAndItemOwner(bookingId, userId)
                         .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не является владельцем забронированной вещи или автором бронирования.")));
@@ -47,8 +48,11 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional(readOnly = true)
     public List<BookingResponseDto> getAllBookingsByOwner(Long ownerId) {
+        log.info("Обрабатываем запрос на получение списка бронирований ...");
         userRepository.findById(ownerId).orElseThrow(() -> new NotFoundException("Пользователь с id = " + ownerId + " не существует."));
-        return bookingRepository.findBookingsByItemOwner(ownerId);
+        List<Booking> bookings = bookingRepository.findBookingsByItemOwner(ownerId);
+        log.info("Список бронирований получен.");
+        return convertBookingsFromEntityToDto(bookings);
     }
 
     @Override
@@ -97,6 +101,7 @@ public class BookingServiceImpl implements BookingService {
             log.info("Бронирование отклонено ...");
         }
 
+        log.info("Сохраняем бронирование после обновления статуса ...");
         bookingRepository.save(booking);
 
         return bookingMapper.toDto(booking, new UserResponseDtoForBooking(booking.getBooker().getId()), new ItemResponseDtoForBooking(item.get().getId(), item.get().getName()));
@@ -130,6 +135,17 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional(readOnly = true)
     public List<BookingResponseDto> getAllBookingsByUser(Long userId) {
-        return bookingRepository.findBookingsByUser(userId);
+        log.info("Обрабатываем запрос на получение списка бронирований пользователя с id = {} ...", userId);
+        List<Booking> bookings = bookingRepository.findBookingsByUser(userId);
+        log.info("Список бронирований получен.");
+        return convertBookingsFromEntityToDto(bookings);
+    }
+
+    private List<BookingResponseDto> convertBookingsFromEntityToDto(List<Booking> bookings) {
+        return bookings.stream()
+                .map(b -> bookingMapper.toDto(b,
+                        new UserResponseDtoForBooking(b.getBooker().getId()),
+                        new ItemResponseDtoForBooking(b.getItem().getId(), b.getItem().getName())))
+                .toList();
     }
 }

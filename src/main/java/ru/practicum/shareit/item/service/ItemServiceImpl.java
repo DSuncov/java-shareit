@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
+import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.exception.NotAvailableException;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -18,6 +19,7 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.dto.UserResponseDtoForBooking;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -36,15 +38,18 @@ public class ItemServiceImpl implements ItemService {
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
+    private final BookingMapper bookingMapper;
 
     @Override
     @Transactional(readOnly = true)
     public List<ItemResponseDto> getAllItemsByOwner(Long userId) {
         log.info("Обрабатываем запрос на получение списка всех вещей владельца ...");
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не существует."));
-        List<ItemResponseDto> listOfItemsByOwner = itemRepository.findAllItemsByOwner(userId);
+        List<Item> listOfItemsByOwner = itemRepository.findAllItemsByOwner(userId);
         log.info("Запрос обработан успешно. Список вещей отправлен владельцу.");
-        return listOfItemsByOwner;
+        return listOfItemsByOwner.stream()
+                .map(itemMapper::toDto)
+                .toList();
     }
 
     @Override
@@ -55,16 +60,20 @@ public class ItemServiceImpl implements ItemService {
         Item item = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("Вещи с id = " + itemId + " не существует."));
         String authorName = userRepository.findNameByUser(userId);
 
+        log.info("Обрабатываем запрос на получение списка отзывов ... ");
         List<CommentResponseDto> listOfCommentsByItem = commentRepository.findCommentsByItem(userId, itemId)
                 .stream()
                 .map(c -> commentMapper.toDto(c, authorName))
                 .toList();
-        BookingResponseDto lastBooking = bookingRepository.findLastBooking(itemId, userId);
-        BookingResponseDto nextBooking = bookingRepository.findNextBooking(itemId, userId);
+        log.info("Обрабатываем запрос на получение последнего бронирования ... ");
+        Optional<Booking> lastBooking = bookingRepository.findLastBooking(itemId, userId);
+        log.info("Обрабатываем запрос на получение следующего бронирования ... ");
+        Optional<Booking> nextBooking = bookingRepository.findNextBooking(itemId, userId);
 
         ItemResponseDtoForComment dto = itemMapper.toDtoWithComments(item);
-        dto.setLastBooking(lastBooking);
-        dto.setNextBooking(nextBooking);
+        lastBooking.ifPresent(b -> dto.setLastBooking(convertBookingFromEntityToDto(b)));
+        nextBooking.ifPresent(b -> dto.setNextBooking(convertBookingFromEntityToDto(b)));
+
         dto.setComments(listOfCommentsByItem);
 
         log.info("Запрос успешно обработан. Информация о вещи с id = {} отправлена клиенту", itemId);
@@ -78,7 +87,6 @@ public class ItemServiceImpl implements ItemService {
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не существует."));
         Item newItem = itemMapper.toEntity(item);
         newItem.setOwner(user);
-        //newItem.setOwnerId(userId);
         Item createdItem = itemRepository.save(newItem);
         log.info("Запрос успешно обработан. Новая вещь сохранена в БД.");
         return itemMapper.toDto(createdItem);
@@ -122,14 +130,17 @@ public class ItemServiceImpl implements ItemService {
         if (text.isBlank()) {
             return Collections.emptyList();
         }
-        List<ItemResponseDto> listOfItems = itemRepository.search(text, userId);
+        List<Item> listOfItems = itemRepository.search(text, userId);
         log.info("Запрос успешно обработан. Список доступных вещей отправлен клиенту.");
-        return listOfItems;
+        return listOfItems.stream()
+                .map(itemMapper::toDto)
+                .toList();
     }
 
     @Override
     @Transactional
     public CommentResponseDto createComment(CommentCreateDto comment, Long authorId, Long itemId) {
+        log.info("Обрабатываем запрос на создание отзыва ...");
         Booking booking = bookingRepository.findByAuthorAndItem(authorId, itemId)
                 .orElseThrow(() -> new NotAvailableException("Пользователь с id = " + authorId + " не создавал бронирование либо срок бронирования еще не истек."));
 
@@ -140,6 +151,13 @@ public class ItemServiceImpl implements ItemService {
         String authorName = userRepository.findNameByUser(authorId);
 
         Comment newComment = commentRepository.save(commentToEntity);
+        log.info("Отзыв успешно создан.");
         return commentMapper.toDto(newComment, authorName);
+    }
+
+    private BookingResponseDto convertBookingFromEntityToDto(Booking booking) {
+        return bookingMapper.toDto(booking,
+                new UserResponseDtoForBooking(booking.getBooker().getId()),
+                new ItemResponseDtoForBooking(booking.getItem().getId(), booking.getItem().getName()));
     }
 }
