@@ -1,12 +1,9 @@
 package ru.practicum.shareit.item.model;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import ru.practicum.shareit.request.ItemRequest;
+import jakarta.persistence.*;
+
+import lombok.*;
+import ru.practicum.shareit.user.model.User;
 
 /**
  * TODO Sprint add-controllers.
@@ -14,21 +11,24 @@ import ru.practicum.shareit.request.ItemRequest;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Entity
+@Table(name = "items")
 public class Item {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Название должно быть задано.")
+    @Column(nullable = false)
     private String name;
 
-    @NotBlank(message = "Описание должно быть указано.")
+    @Column(nullable = false)
     private String description;
 
-    @NotNull(message = "Доступность товара для бронирования должна быть указана.")
+    @Column(name = "is_available", nullable = false)
     private Boolean available;
 
-    private Long ownerId;
-
-    private ItemRequest request;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private User owner;
 }

@@ -7,8 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.dto.UserCreateDto;
+import ru.practicum.shareit.user.dto.UserResponseDto;
+import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
@@ -25,47 +26,36 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<UserDto>> getAllUsers() {
+    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
         var listOfAllUsers = userService.getAllUsers();
         return ResponseEntity.ok(listOfAllUsers);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDto> getUserById(
-            @PathVariable("id")
-            @Positive(message = "id должно быть положительным числом")
-            @NotNull(message = "id пользователя должно быть задано") Long userId) {
+    public ResponseEntity<UserResponseDto> getUserById(
+            @PathVariable("id") @Positive(message = "id должно быть положительным числом") @NotNull(message = "id пользователя должно быть задано") Long userId) {
         var user = userService.getUserById(userId);
         return ResponseEntity.ok(user);
     }
 
     @PostMapping
-    public ResponseEntity<UserDto> createUser(@NotNull(message = "В качестве User в запросе передан null.") @Valid @RequestBody User user) {
-        var newUser = userService.createUser(user);
+    public ResponseEntity<UserResponseDto> createUser(
+            @NotNull(message = "В качестве User в запросе передан null.") @Valid @RequestBody UserCreateDto userCreateDto) {
+        UserResponseDto newUser = userService.createUser(userCreateDto);
         return ResponseEntity.ok(newUser);
     }
 
-    @PutMapping
-    public ResponseEntity<UserDto> updateUser(@NotNull(message = "В качестве User в запросе передан null.") @Valid @RequestBody User user) {
-        var updatedUser = userService.updateUser(user);
-        return ResponseEntity.ok(updatedUser);
-    }
-
     @PatchMapping("/{userId}")
-    public ResponseEntity<UserDto> editUser(
-            @PathVariable
-            @Positive(message = "id должно быть положительным числом")
-            @NotNull(message = "id пользователя должно быть задано") Long userId,
-            @NotNull @RequestBody User user) {
-        var editUser = userService.editUser(userId, user);
+    public ResponseEntity<UserResponseDto> editUser(
+            @PathVariable @Positive(message = "id должно быть положительным числом") @NotNull(message = "id пользователя должно быть задано") Long userId,
+            @NotNull(message = "В качестве User в запросе передан null.") @Valid @RequestBody UserUpdateDto userUpdateDto) {
+        var editUser = userService.editUser(userId, userUpdateDto);
         return ResponseEntity.ok(editUser);
     }
 
     @DeleteMapping("/{id}")
     public void deleteUser(
-            @PathVariable("id")
-            @Positive(message = "id должно быть положительным числом")
-            @NotNull(message = "id пользователя должно быть задано") Long userId) {
+            @PathVariable("id") @Positive(message = "id должно быть положительным числом") @NotNull(message = "id пользователя должно быть задано") Long userId) {
         userService.deleteUser(userId);
     }
 }

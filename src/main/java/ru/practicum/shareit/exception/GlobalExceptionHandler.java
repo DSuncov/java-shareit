@@ -24,6 +24,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(NotAvailableException.class)
+    public ResponseEntity<ErrorResponse> handleNotFoundException(final NotAvailableException e) {
+        log.error("Обработано исключение NotAvailableException", e);
+        return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(AccessException.class)
+    public ResponseEntity<ErrorResponse> handleNotFoundException(final AccessException e) {
+        log.error("Обработано исключение AccessException", e);
+        return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(DuplicatedDataException.class)
     public ResponseEntity<ErrorResponse> handleDuplicatedDataException(final DuplicatedDataException e) {
         log.error("Обработано исключение DuplicatedDataException", e);

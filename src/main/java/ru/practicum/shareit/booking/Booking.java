@@ -1,10 +1,7 @@
 package ru.practicum.shareit.booking;
 
-import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
@@ -16,25 +13,30 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Entity
+@Table(name = "bookings")
 public class Booking {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    @NotNull
-    @FutureOrPresent(message = "Дата и время создания бронирования не может быть в прошлом.")
+    @Column(name = "start_date", nullable = false)
     private LocalDateTime start;
 
-    @NotNull
-    @Future(message = "Дата и время окончания бронирования не может быть в прошлом и настоящем.")
+    @Column(name = "end_date", nullable = false)
     private LocalDateTime end;
 
-    @NotNull(message = "Вещь, которая бронируется должна быть указана.")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
-    @NotNull(message = "Пользователь, который бронирует вещь, должен быть указан.")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booker_id", nullable = false)
     private User booker;
 
-    @NotNull(message = "Статус бронирования должен быть указан.")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
     private Status status;
 }
