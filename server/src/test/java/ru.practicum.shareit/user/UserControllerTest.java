@@ -9,6 +9,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ru.practicum.shareit.exception.exceptions.DuplicatedDataException;
@@ -23,16 +24,17 @@ import ru.practicum.shareit.user.service.UserServiceImpl;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
+@ActiveProfiles("test")
 public class UserControllerTest {
 
     @Mock
@@ -49,8 +51,6 @@ public class UserControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(userController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
-
-        userService.createUser(new UserCreateDto("User №1", "user_1@yandex.ru"));
     }
 
     @Test
@@ -59,7 +59,6 @@ public class UserControllerTest {
         UserResponseDto response = new UserResponseDto(1L, "User №1", "user_1@yandex.ru");
 
         when(userService.createUser(any(UserCreateDto.class))).thenReturn(response);
-
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(response)))
@@ -67,17 +66,19 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.name").value("User №1"))
                 .andExpect(jsonPath("$.email").value("user_1@yandex.ru"));
+
+        verify(userService, times(1)).createUser(any(UserCreateDto.class));
     }
 
     @Test
-    @DisplayName("Возвращает список вссех пользователей.")
+    @DisplayName("Возвращает список всех пользователей.")
     void getAllUsers_shouldReturnListOfUsers() throws Exception {
-        UserCreateDto create = new UserCreateDto("User №2", "user_2@yandex.ru");
-        userService.createUser(create);
-
         UserResponseDto response1 = new UserResponseDto(1L, "User №1", "user_1@yandex.ru");
         UserResponseDto response2 = new UserResponseDto(2L, "User №2", "user_2@yandex.ru");
-        given(userService.getAllUsers()).willReturn(List.of(response1, response2));
+        when(userService.getAllUsers()).thenReturn(List.of(response1, response2));
+
+        List<UserResponseDto> usersTest = userService.getAllUsers();
+        assertEquals(List.of(response1, response2), usersTest);
 
         mockMvc.perform(get("/users")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -87,13 +88,15 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$[0].name").value("User №1"))
                 .andExpect(jsonPath("$[1].id").value(2))
                 .andExpect(jsonPath("$[1].email").value("user_2@yandex.ru"));
+
+        verify(userService, times(2)).getAllUsers();
     }
 
     @Test
     @DisplayName("Возвращает пользователя по его id.")
     void getUserById_shouldReturnUserById() throws Exception {
-        UserResponseDto response1 = new UserResponseDto(1L, "User №1", "user_1@yandex.ru");
-        given(userService.getUserById(1L)).willReturn(response1);
+        UserResponseDto response = new UserResponseDto(1L, "User №1", "user_1@yandex.ru");
+        given(userService.getUserById(1L)).willReturn(response);
 
         mockMvc.perform(get("/users/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -101,6 +104,8 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.name").value("User №1"))
                 .andExpect(jsonPath("$.email").value("user_1@yandex.ru"));
+
+        verify(userService, times(1)).getUserById(anyLong());
     }
 
     @Test
@@ -111,6 +116,8 @@ public class UserControllerTest {
         mockMvc.perform(get("/users/{id}", 2L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
+
+        verify(userService, times(1)).getUserById(anyLong());
     }
 
     @Test
@@ -137,6 +144,8 @@ public class UserControllerTest {
 
         mockMvc.perform(delete("/users/{id}", 1L))
                 .andExpect(status().isOk());
+
+        verify(userService, times(1)).deleteUser(anyLong());
     }
 
     @Test
@@ -155,5 +164,7 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.name").value("new_Name"))
                 .andExpect(jsonPath("$.email").value("user_1@yandex.ru"));
+
+        verify(userService, times(1)).editUser(anyLong(), any(UserUpdateDto.class));
     }
 }

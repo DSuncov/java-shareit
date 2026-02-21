@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.exceptions.DuplicatedDataException;
 import ru.practicum.shareit.exception.exceptions.NotFoundException;
 import ru.practicum.shareit.user.dto.UserCreateDto;
-import ru.practicum.shareit.user.dto.UserMapper;
+import ru.practicum.shareit.user.mappers.UserMapper;
 import ru.practicum.shareit.user.dto.UserResponseDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.model.User;
@@ -68,11 +68,15 @@ public class UserServiceImpl implements UserService {
                 checkOnsSameEmail(user.getEmail());
                 u.setEmail(user.getEmail());
             }
+
+            userRepository.save(u);
+
         }, () -> {
             throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
         });
+
         log.info("Запрос успешно обработан. Информация о пользователе с id = {} обновлена частично.", userId);
-        return userMapper.toDto(editUser.get());
+        return userMapper.toDto(userRepository.findById(userId).get());
     }
 
     @Override

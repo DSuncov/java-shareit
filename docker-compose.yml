@@ -8,7 +8,7 @@ services:
     depends_on:
       - server
     environment:
-      - SHAREIT_SERVER_URL=http://server:8090
+      - SHAREIT_SERVER_URL=http://server:9090
       - TZ=Europe/Samara
 
   server:
@@ -16,7 +16,7 @@ services:
     image: shareit-server
     container_name: shareit-server
     ports:
-      - "8090:8090"
+      - "9090:9090"
     depends_on:
       - db
     environment:
@@ -35,8 +35,8 @@ services:
       - POSTGRES_USER=shareit
       - POSTGRES_DB=shareit
       - TZ=Europe/Samara
-    volumes:
-      - ./server/src/main/resources/schema:/docker-entrypoint-initdb.d
+    #volumes:
+    #  - ./server/src/main/resources/schema:/docker-entrypoint-initdb.d
     healthcheck:
       test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
       timeout: 5s

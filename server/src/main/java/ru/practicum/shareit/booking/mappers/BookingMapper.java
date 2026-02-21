@@ -1,6 +1,8 @@
-package ru.practicum.shareit.booking.dto;
+package ru.practicum.shareit.booking.mappers;
 
 import org.springframework.stereotype.Component;
+import ru.practicum.shareit.booking.dto.BookingCreateDto;
+import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.dto.response.ItemResponseDtoForBooking;
 import ru.practicum.shareit.item.model.Item;

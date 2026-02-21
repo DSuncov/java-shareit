@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import ru.practicum.shareit.booking.enums.Status;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.dto.create.CommentCreateDto;
-import ru.practicum.shareit.item.dto.mappers.CommentMapper;
+import ru.practicum.shareit.item.mappers.CommentMapper;
 import ru.practicum.shareit.item.dto.response.CommentResponseDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;

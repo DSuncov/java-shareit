@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.booking.dto.BookingMapper;
+import ru.practicum.shareit.booking.mappers.BookingMapper;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
@@ -12,8 +12,8 @@ import ru.practicum.shareit.exception.exceptions.NotAvailableException;
 import ru.practicum.shareit.exception.exceptions.NotFoundException;
 import ru.practicum.shareit.item.dto.create.CommentCreateDto;
 import ru.practicum.shareit.item.dto.create.ItemCreateDto;
-import ru.practicum.shareit.item.dto.mappers.CommentMapper;
-import ru.practicum.shareit.item.dto.mappers.ItemMapper;
+import ru.practicum.shareit.item.mappers.CommentMapper;
+import ru.practicum.shareit.item.mappers.ItemMapper;
 import ru.practicum.shareit.item.dto.response.CommentResponseDto;
 import ru.practicum.shareit.item.dto.response.ItemResponseDto;
 import ru.practicum.shareit.item.dto.response.ItemResponseDtoForBooking;
@@ -128,6 +128,8 @@ public class ItemServiceImpl implements ItemService {
             if (item.getAvailable() != null) {
                 i.setAvailable(item.getAvailable());
             }
+
+            itemRepository.save(i);
 
         }, () -> {
             throw new NotFoundException("Вещи с id = " + item + " не существует.");

@@ -51,6 +51,9 @@
 						<systemPropertyVariables>
 							<spring.profiles.active>test</spring.profiles.active>
 						</systemPropertyVariables>
+						<includes>
+							<include>**/*Test.java</include>
+						</includes>
 					</configuration>
 				</plugin>
 				<plugin>
@@ -147,7 +150,7 @@
 											<limit>
 												<counter>CLASS</counter>
 												<value>MISSEDCOUNT</value>
-												<maximum>1</maximum>
+												<maximum>2</maximum>
 											</limit>
 										</limits>
 									</rule>

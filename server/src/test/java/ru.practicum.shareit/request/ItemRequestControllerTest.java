@@ -18,7 +18,6 @@ import ru.practicum.shareit.request.controller.ItemRequestController;
 import ru.practicum.shareit.request.dto.ItemRequestCreateDto;
 import ru.practicum.shareit.request.dto.ItemRequestResponseDto;
 import ru.practicum.shareit.request.service.ItemRequestServiceImpl;
-import ru.practicum.shareit.user.dto.UserCreateDto;
 import ru.practicum.shareit.user.service.UserServiceImpl;
 
 import java.time.Instant;
@@ -27,7 +26,8 @@ import java.util.List;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -53,8 +53,6 @@ public class ItemRequestControllerTest {
                 .build();
 
         objectMapper.registerModule(new JavaTimeModule());
-
-        userService.createUser(new UserCreateDto("User №1", "user_1@yandex.ru"));
     }
 
     @Test
